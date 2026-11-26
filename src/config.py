@@ -8,15 +8,24 @@ from dotenv import load_dotenv
 
 # Tìm thư mục gốc của project
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data_sample"
-CACHE_DIR = BASE_DIR / "data" / "live_cache"
 
-# Load file .env nếu tồn tại
+# Đường dẫn thư mục dữ liệu
+SAMPLE_DATA_DIR = BASE_DIR / "data_sample"       # Dữ liệu mô phỏng 10 phiên kiểm chứng offline
+REAL_DATA_DIR = BASE_DIR / "data" / "real"        # Dữ liệu thật thu thập từ NEO API
+CACHE_DIR = BASE_DIR / "data" / "live_cache"      # Bộ đệm tick realtime trong phiên
+DATA_DIR = SAMPLE_DATA_DIR                        # Tương thích ngược (alias)
+
+# Đảm bảo các thư mục tồn tại
+SAMPLE_DATA_DIR.mkdir(parents=True, exist_ok=True)
+REAL_DATA_DIR.mkdir(parents=True, exist_ok=True)
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+# Load file .env nếu tồn tại (chỉ ở môi trường local, không commit lên GitHub)
 ENV_PATH = BASE_DIR / ".env"
 if ENV_PATH.exists():
     load_dotenv(ENV_PATH)
 
-# Thiết lập múi giờ Việt Nam
+# Thiết lập múi giờ Việt Nam chuẩn
 TIMEZONE = os.getenv("TIMEZONE", "Asia/Ho_Chi_Minh")
 
 # Mã tài sản mặc định

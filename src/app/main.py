@@ -26,8 +26,8 @@ from src.config import (
     OBI_EXTREME_THRESHOLD,
     LOOKBACK_WINDOW_DAYS
 )
-from src.data.storage import load_market_data
-from src.data.neo_client import NeoApiClient
+from src.data.storage import load_market_data, get_available_sources
+from src.neo_api.client import NeoApiClient
 from src.finance.basis import (
     calculate_basis_series,
     calculate_z_score,
@@ -37,7 +37,7 @@ from src.finance.basis import (
 )
 from src.finance.liquidity import calculate_relative_spread, detect_spread_shock
 from src.finance.orderbook import calculate_obi, calculate_micro_price
-from src.finance.risk import evaluate_system_risk
+from src.analytics.risk_engine import evaluate_system_risk
 from src.app.components import (
     render_kpi_cards,
     render_basis_chart,
@@ -63,11 +63,12 @@ st.sidebar.image("https://neoinvest.vpbanks.com.vn/favicon.ico", width=40)
 st.sidebar.title("Bảng Điều Khiển")
 st.sidebar.markdown("---")
 
+available_sources = get_available_sources() + ["Trực tiếp (NEO API Live)"]
 app_mode = st.sidebar.radio(
     "Chế độ Nguồn Dữ liệu:",
-    ["Dữ liệu Kiểm chứng (10 Phiên Playback)", "Trực tiếp (NEO API Live)"],
+    available_sources,
     index=0,
-    help="Chế độ Playback sử dụng chuỗi 10 phiên đã thu thập để kiểm thử và chấm bài 24/7."
+    help="Hỗ trợ tách biệt dữ liệu kiểm chứng offline, dữ liệu thật từ NEO API đã lưu, hoặc luồng trực tiếp."
 )
 
 st.sidebar.markdown("### ⚙️ Tham số Phân tích")
@@ -84,7 +85,8 @@ st.sidebar.info(
 )
 
 # 4. Tải Dữ liệu & Tính toán Lớp Tài chính
-raw_df = load_market_data()
+source_type = "real" if "Thị trường Thật" in app_mode else "sample"
+raw_df, is_real_data = load_market_data(source=source_type, return_info=True)
 
 # Lọc ngày phiên giao dịch trên sidebar nếu đang ở chế độ Playback
 available_dates = sorted(raw_df["session_date"].unique(), reverse=True)
