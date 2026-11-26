@@ -18,7 +18,7 @@ Dự án giải quyết 3 bài toán vi cấu trúc thị trường thực tế:
 
 ---
 
-## 2. Kiến trúc Thư mục Dự án (Chuẩn theo Mục 9 Đề thi)
+## 2. Kiến trúc Thư mục Dự án 
 
 ```text
 du-an-neo-api/
@@ -77,7 +77,7 @@ pip install -r requirements.txt
    ```powershell
    copy .env.example .env
    ```
-2. Điền `NEO_CLIENT_ID`, `NEO_CLIENT_SECRET`, `NEO_ACCOUNT_NO` (tuyệt đối không đưa tệp `.env` lên GitHub).
+2. Điền `NEO_CLIENT_ID`, `NEO_CLIENT_SECRET`, `NEO_ACCOUNT_NO`.
 
 ### Bước 4: Chạy Kiểm thử Tự động (Unit Tests)
 ```powershell
