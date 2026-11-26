@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Environment & Secrets (TUYỆT ĐỐI KHÔNG COMMIT LÊN GITHUB)
+.env
+*.token
+jwt_token.json
+
+# Data files & cache (Lưu trữ cục bộ)
+data/live_cache/
+data_sample/*.tmp
+
+# IDE
+.vscode/
+.idea/
