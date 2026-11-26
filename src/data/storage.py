@@ -14,11 +14,12 @@ from src.data.generator import ensure_sample_data_exists
 
 
 def get_available_sources() -> List[str]:
-    """Kiểm tra các nguồn dữ liệu có sẵn trên máy."""
-    sources = ["Dữ liệu Kiểm chứng (10 Phiên Mô phỏng)"]
+    """Kiểm tra các nguồn dữ liệu có sẵn trên máy. Ưu tiên Dữ liệu Thật lên đầu nếu đã thu thập."""
+    sources = []
     real_files = list(REAL_DATA_DIR.glob("*.parquet")) + list(REAL_DATA_DIR.glob("*.csv"))
     if real_files:
-        sources.append("Dữ liệu Thị trường Thật (NEO API Đã Lưu)")
+        sources.append("Dữ liệu Thị trường Thật (13 Phiên từ API)")
+    sources.append("Dữ liệu Kiểm chứng (10 Phiên Mô phỏng)")
     return sources
 
 

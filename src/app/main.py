@@ -27,6 +27,7 @@ from src.config import (
     LOOKBACK_WINDOW_DAYS
 )
 from src.data.storage import load_market_data, get_available_sources
+from src.data.ssi_client import sync_latest_ssi_data
 from src.neo_api.client import NeoApiClient
 from src.finance.basis import (
     calculate_basis_series,
@@ -68,8 +69,18 @@ app_mode = st.sidebar.radio(
     "Chế độ Nguồn Dữ liệu:",
     available_sources,
     index=0,
-    help="Hỗ trợ tách biệt dữ liệu kiểm chứng offline, dữ liệu thật từ NEO API đã lưu, hoặc luồng trực tiếp."
+    help="Hỗ trợ tách biệt dữ liệu kiểm chứng offline, dữ liệu thật từ SSI/NEO API đã lưu, hoặc luồng trực tiếp."
 )
+
+# Nút đồng bộ 1-click ngay trên giao diện Streamlit
+if st.sidebar.button("🔄 Cập nhật Dữ liệu Mới nhất (API)", use_container_width=True):
+    with st.spinner("Đang kết nối SSI FastConnect v3 & lưu trữ phiên mới..."):
+        sync_res = sync_latest_ssi_data(days=7)
+        if sync_res.get("success"):
+            st.sidebar.success(f"Đã cập nhật {sync_res['total_sessions']} phiên ({sync_res['end_date']})!")
+            st.rerun()
+        else:
+            st.sidebar.error(f"Lỗi đồng bộ: {sync_res.get('error')}")
 
 st.sidebar.markdown("### ⚙️ Tham số Phân tích")
 z_thresh = st.sidebar.slider("Ngưỡng Z-score Cực trị (σ)", 1.5, 3.0, Z_SCORE_THRESHOLD, 0.1)
@@ -139,12 +150,15 @@ h_col1, h_col2, h_col3 = st.columns([2, 1, 1])
 with h_col1:
     st.write(f"🕒 **Cập nhật:** `{latest['timestamp']}` *(Múi giờ Asia/Ho_Chi_Minh, UTC+7)*")
 with h_col2:
-    if app_mode.startswith("Dữ liệu Kiểm chứng"):
-        st.markdown("🟢 **Trạng thái:** `Dữ liệu Kiểm chứng (OK)`")
+    if is_real_data:
+        st.markdown("🟢 **Trạng thái:** `Dữ liệu Thị trường Thật (OK)`")
+    elif app_mode.startswith("Dữ liệu Kiểm chứng"):
+        st.markdown("🔵 **Trạng thái:** `Dữ liệu Mô phỏng Kiểm chứng`")
     else:
-        st.markdown("🟡 **Trạng thái:** `Chờ Kết nối NEO API (Cần IP Whitelist)`")
+        st.markdown("🟡 **Trạng thái:** `Chờ Kết nối NEO API Live`")
 with h_col3:
-    st.markdown(f"🏷️ **Mã theo dõi:** `{DEFAULT_FUTURE_SYMBOL}` vs `{DEFAULT_UNDERLYING_SYMBOL}`")
+    fut_display = latest.get("futures_symbol", DEFAULT_FUTURE_SYMBOL)
+    st.markdown(f"🏷️ **Mã theo dõi:** `{fut_display}` vs `{DEFAULT_UNDERLYING_SYMBOL}`")
 
 st.markdown("---")
 

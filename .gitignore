@@ -10,6 +10,8 @@ venv/
 
 # Environment & Secrets (TUYỆT ĐỐI KHÔNG COMMIT LÊN GITHUB)
 .env
+.env*
+!.env.example
 *.token
 jwt_token.json
 
