@@ -32,13 +32,13 @@ Hợp đồng tương lai chỉ số VN30 (VN30F1M) là công cụ phòng vệ r
 ---
 
 ## 3. THIẾT KẾ SẢN PHẨM & SƠ ĐỒ KIẾN TRÚC (SYSTEM ARCHITECTURE)
-Hệ thống tuân thủ chuỗi xử lý 6 tầng theo yêu cầu của Khoa:
-`NEO API -> Thu thập -> Chuẩn hóa/Lưu trữ -> Logic Tài chính -> Phân tích/Mô hình -> Giao diện Streamlit -> Người dùng`
+Hệ thống tuân thủ chuỗi xử lý 5 lớp tích hợp xuyên suốt (100% Read-only):
+`Data Ingestion (NEO API / SSI) -> Market Regime & Risk Scoring -> Slippage Simulator (Read-only) -> Out-of-sample Validation & Resilience Log -> Streamlit Decision Flow`
 
 *(Chèn sơ đồ kiến trúc từ file `docs/architecture.md`)*
 
 * **Lựa chọn công nghệ:** Ngôn ngữ Python 3.14, thư viện tính toán định lượng `pandas`, `numpy`, giao diện `Streamlit`, trực quan hóa tương tác `Plotly`, kiểm thử tự động `pytest`.
-* **Cơ chế an toàn:** Tách biệt hoàn toàn khóa bảo mật thông qua biến môi trường `.env`, cấu trúc thư mục module hóa rõ ràng (`neo_api`, `data`, `finance`, `analytics`, `app`).
+* **Cơ chế an toàn:** Tách biệt hoàn toàn khóa bảo mật thông qua biến môi trường `.env`, cấu trúc thư mục module hóa rõ ràng (`neo_api`, `data`, `finance`, `analytics`, `app`), khóa cứng chế độ chỉ đọc (Read-only).
 
 ---
 
@@ -64,7 +64,9 @@ Hệ thống xây dựng 4 trụ cột định lượng có cơ sở học thu�
    $$OBI_t = \frac{\sum_{i=1}^3 V_{\text{Bid}, i} - \sum_{i=1}^3 V_{\text{Ask}, i}}{\sum_{i=1}^3 V_{\text{Bid}, i} + \sum_{i=1}^3 V_{\text{Ask}, i}} \in [-1.0, 1.0]$$
 4. **Độ giãn Chênh lệch Mua - Bán tương đối (Relative Spread):**
    $$\text{Spread}_t (\%) = \frac{\text{Ask}_1 - \text{Bid}_1}{\frac{1}{2}(\text{Ask}_1 + \text{Bid}_1)} \times 100$$
-5. **Điểm số Rủi ro Tổng hợp (Risk Engine):** Thang đo từ 0 đến 100 điểm kết hợp trọng số từ 3 chỉ báo trên để đưa ra khuyến nghị thực thi.
+5. **Phân loại Chế độ Thị trường & Điểm Rủi ro (`Market Regime & Risk Scoring`):** Kết hợp 3 chiều chỉ báo để phân loại 6 trạng thái vi cấu trúc nội ngày (từ *Cân bằng bình thường* đến *Basis căng cực trị + Thanh khoản co hẹp*) kèm thang điểm 0–100.
+6. **Mô phỏng Chi phí Thực thi & Trượt giá (`Execution & Slippage Simulator — Read-only`):** Khớp giả định lệnh Mua/Bán (5, 20, 50, 100 HĐ) qua sổ lệnh 3 bước giá để ước lượng giá khớp bình quân, trượt giá (điểm & %) và độ phủ thanh khoản.
+7. **Kiểm chứng Ngoài mẫu & Nhật ký Sự cố (`Out-of-sample Validation & Resilience Log`):** Tách tập Train/Test theo trình tự thời gian (tránh *look-ahead bias*), tách riêng khung giờ nhiễu ATO/ATC và tự động kiểm toán NaN, trùng lặp, lỗi sổ lệnh (`Ask1 < Bid1`).
 
 ---
 

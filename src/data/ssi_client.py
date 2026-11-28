@@ -29,10 +29,13 @@ class SsiFastConnectClient:
         self.api_secret = (api_secret or SSI_CONSUMER_SECRET).strip()
         self.auth = None
         self.data_client = None
+        self.last_error: Optional[str] = None
 
     def authenticate(self) -> bool:
         """Xác thực với cổng SSI FastConnect v3 (api.ssi.com.vn)."""
+        self.last_error = None
         if not self.api_key or not self.api_secret:
+            self.last_error = "Thiếu SSI_CONSUMER_ID hoặc SSI_CONSUMER_SECRET trong .env."
             return False
         try:
             _patch_httpx_ssl()
@@ -41,7 +44,8 @@ class SsiFastConnectClient:
             self.auth.authenticate()
             self.data_client = Data(self.auth)
             return True
-        except Exception:
+        except Exception as exc:
+            self.last_error = f"{type(exc).__name__}: {exc}"
             return False
 
     def get_active_vn30_futures_symbol(self) -> str:
@@ -171,10 +175,14 @@ def sync_latest_ssi_data(days: int = 14) -> dict:
 
     client = SsiFastConnectClient()
     if not client.authenticate():
-        return {"success": False, "error": "Không thể xác thực với SSI API (Kiểm tra .env)."}
+        detail = client.last_error or "Lỗi không xác định."
+        return {"success": False, "error": f"Không thể xác thực với SSI API — {detail}"}
 
-    fut_sym = client.get_active_vn30_futures_symbol()
-    new_df = client.fetch_1m_aligned_sessions(futures_symbol=fut_sym, underlying_symbol="VN30", days=days)
+    try:
+        fut_sym = client.get_active_vn30_futures_symbol()
+        new_df = client.fetch_1m_aligned_sessions(futures_symbol=fut_sym, underlying_symbol="VN30", days=days)
+    except Exception as exc:
+        return {"success": False, "error": f"Lỗi khi tải dữ liệu SSI API — {type(exc).__name__}: {exc}"}
     if new_df.empty:
         return {"success": False, "error": "Không nhận được dữ liệu mới từ SSI."}
 
